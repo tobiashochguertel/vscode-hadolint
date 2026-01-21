@@ -3,7 +3,8 @@
     "id": "builtin_group_id",
     "name": "Currently Open Files",
     "files": [
-      "Taskfile.yml"
+      "Taskfile.yml",
+      ".actrc"
     ],
     "builtIn": true
   }

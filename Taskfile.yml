@@ -202,6 +202,7 @@ tasks:
       - code --extensionDevelopmentPath=$(pwd)
 
   # Local workflow testing with act
+  # Configuration in .actrc for Colima compatibility
   act:install:
     desc: Install act (GitHub Actions local runner)
     cmds:
@@ -216,30 +217,51 @@ tasks:
           exit 1
         fi
 
+  act:upgrade:
+    desc: Upgrade act to the latest version
+    cmds:
+      - |
+        if command -v brew &> /dev/null; then
+          brew upgrade act
+        else
+          echo "Please upgrade act manually from https://github.com/nektos/act"
+          exit 1
+        fi
+
+  act:pull:
+    desc: Pre-pull Docker images for act (avoids auth issues)
+    cmds:
+      - docker pull --platform linux/amd64 catthehacker/ubuntu:act-latest
+      - echo "✓ Images pulled successfully"
+
   act:list:
     desc: List available workflows
     cmds:
       - act {{.VERBOSE_FLAG}} -l
 
   act:ci:
-    desc: Run CI workflow locally (requires Docker without authentication issues)
+    desc: Run CI workflow locally (run task act:pull first to cache images)
+    deps: [act:pull]
     cmds:
-      - act {{.VERBOSE_FLAG}} -j lint -j test --container-architecture linux/amd64
+      - act {{.VERBOSE_FLAG}} --pull=false -j lint -j test
 
   act:ci:lint:
-    desc: Run CI lint job locally (requires Docker)
+    desc: Run CI lint job locally
+    deps: [act:pull]
     cmds:
-      - act {{.VERBOSE_FLAG}} -j lint --container-architecture linux/amd64
+      - act {{.VERBOSE_FLAG}} --pull=false -j lint
 
   act:ci:test:
-    desc: Run CI test job locally (requires Docker)
+    desc: Run CI test job locally
+    deps: [act:pull]
     cmds:
-      - act {{.VERBOSE_FLAG}} -j test --container-architecture linux/amd64
+      - act {{.VERBOSE_FLAG}} --pull=false -j test
 
   act:codeql:
-    desc: Run CodeQL workflow locally (requires Docker)
+    desc: Run CodeQL workflow locally
+    deps: [act:pull]
     cmds:
-      - act {{.VERBOSE_FLAG}} -W .github/workflows/codeql-analysis.yml --container-architecture linux/amd64
+      - act {{.VERBOSE_FLAG}} --pull=false -W .github/workflows/codeql-analysis.yml
 
   act:dryrun:
     desc: Dry-run all workflows (shows what would run without Docker)

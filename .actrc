@@ -1,0 +1,9 @@
+# act configuration for Colima compatibility
+# See: https://github.com/nektos/act/issues/1051
+
+# Don't try to bind mount the Docker socket into containers
+# This fixes the "operation not supported" error with Colima
+--container-daemon-socket=-
+
+# Use linux/amd64 architecture for M-series Macs
+--container-architecture=linux/amd64
