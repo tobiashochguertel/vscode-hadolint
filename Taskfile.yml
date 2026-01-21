@@ -1,0 +1,236 @@
+version: '3'
+
+vars:
+  EXTENSION_NAME: hadolint
+  PUBLISHER: TobiasHochguertel
+
+tasks:
+  default:
+    desc: List all available tasks
+    cmds:
+      - task --list
+
+  install:
+    desc: Install all dependencies
+    cmds:
+      - npm install
+    sources:
+      - package.json
+      - client/package.json
+      - server/package.json
+
+  clean:
+    desc: Clean build artifacts and dependencies
+    cmds:
+      - rm -rf node_modules client/node_modules server/node_modules
+      - rm -rf client/out server/out
+      - rm -rf *.vsix
+      - rm -rf .vscode-test
+
+  build:
+    desc: Build the extension
+    deps: [install]
+    cmds:
+      - npm run build
+    sources:
+      - client/src/**/*.ts
+      - server/src/**/*.ts
+      - tsconfig.json
+      - client/tsconfig.json
+      - server/tsconfig.json
+    generates:
+      - client/out/**/*.js
+      - server/out/**/*.js
+
+  watch:
+    desc: Watch and rebuild on changes
+    cmds:
+      - npm run watch
+
+  compile:
+    desc: Compile TypeScript without bundling
+    cmds:
+      - npm run compile
+
+  test:
+    desc: Run all tests
+    deps: [build]
+    cmds:
+      - npm test
+
+  test:unit:
+    desc: Run unit tests
+    cmds:
+      - echo "Unit tests not yet configured"
+
+  test:integration:
+    desc: Run integration tests
+    cmds:
+      - echo "Integration tests not yet configured"
+
+  test:e2e:
+    desc: Run E2E tests
+    deps: [build]
+    cmds:
+      - sh ./scripts/e2e.sh
+
+  lint:
+    desc: Lint the codebase
+    cmds:
+      - npx tsc --noEmit
+      - echo "✓ TypeScript compilation check passed"
+
+  format:
+    desc: Format code
+    cmds:
+      - npx prettier --write "**/*.{ts,json,md,yml}"
+
+  package:
+    desc: Package the extension
+    deps: [build]
+    cmds:
+      - npx @vscode/vsce package
+    generates:
+      - '*.vsix'
+
+  version:bump:
+    desc: Bump version (usage - task version:bump -- <major|minor|patch>)
+    cmds:
+      - npm version {{.CLI_ARGS}} --no-git-tag-version
+      - git add package.json package-lock.json
+      - 'git commit -m "chore: bump version to $(node -p \"require(''./package.json'').version\")"'
+
+  version:patch:
+    desc: Bump patch version
+    cmds:
+      - task version:bump -- patch
+
+  version:minor:
+    desc: Bump minor version
+    cmds:
+      - task version:bump -- minor
+
+  version:major:
+    desc: Bump major version
+    cmds:
+      - task version:bump -- major
+
+  publish:vscode:
+    desc: Publish to VS Code Marketplace
+    deps: [package]
+    cmds:
+      - npx @vscode/vsce publish
+    preconditions:
+      - sh: test -n "$VSCE_PAT"
+        msg: 'VSCE_PAT environment variable must be set'
+
+  publish:openvsx:
+    desc: Publish to Open VSX Registry
+    deps: [package]
+    cmds:
+      - npx ovsx publish *.vsix -p $OVSX_PAT
+    preconditions:
+      - sh: test -n "$OVSX_PAT"
+        msg: 'OVSX_PAT environment variable must be set'
+
+  publish:all:
+    desc: Publish to both VS Code Marketplace and Open VSX
+    deps: [publish:vscode, publish:openvsx]
+
+  outdated:
+    desc: Check for outdated dependencies
+    cmds:
+      - npm outdated || true
+      - cd client && npm outdated || true
+      - cd server && npm outdated || true
+
+  update:deps:
+    desc: Update dependencies to latest versions
+    cmds:
+      - npm update
+      - cd client && npm update
+      - cd server && npm update
+
+  security:audit:
+    desc: Run security audit
+    cmds:
+      - npm audit
+      - cd client && npm audit
+      - cd server && npm audit
+
+  security:fix:
+    desc: Fix security vulnerabilities
+    cmds:
+      - npm audit fix
+      - cd client && npm audit fix
+      - cd server && npm audit fix
+
+  release:
+    desc: Create a new release (version bump, tag, publish)
+    cmds:
+      - task version:bump -- {{.CLI_ARGS}}
+      - git tag v$(node -p "require('./package.json').version")
+      - git push origin main --tags
+      - task publish:all
+
+  ci:
+    desc: Run CI checks
+    cmds:
+      - task lint
+      - task build
+      - task test
+
+  dev:
+    desc: Start development environment
+    cmds:
+      - task watch
+
+  debug:
+    desc: Launch extension in debug mode
+    cmds:
+      - code --extensionDevelopmentPath=$(pwd)
+
+  # Local workflow testing with act
+  act:install:
+    desc: Install act (GitHub Actions local runner)
+    cmds:
+      - |
+        if command -v act &> /dev/null; then
+          echo "✓ act is already installed ($(act --version))"
+        elif command -v brew &> /dev/null; then
+          echo "Installing act via Homebrew..."
+          brew install act
+        else
+          echo "Please install act manually from https://github.com/nektos/act"
+          exit 1
+        fi
+
+  act:list:
+    desc: List available workflows
+    cmds:
+      - act -l
+
+  act:ci:
+    desc: Run CI workflow locally (requires Docker without authentication issues)
+    cmds:
+      - act -j lint -j test --container-architecture linux/amd64
+
+  act:ci:lint:
+    desc: Run CI lint job locally (requires Docker)
+    cmds:
+      - act -j lint --container-architecture linux/amd64
+
+  act:ci:test:
+    desc: Run CI test job locally (requires Docker)
+    cmds:
+      - act -j test --container-architecture linux/amd64
+
+  act:codeql:
+    desc: Run CodeQL workflow locally (requires Docker)
+    cmds:
+      - act -W .github/workflows/codeql-analysis.yml --container-architecture linux/amd64
+
+  act:dryrun:
+    desc: Dry-run all workflows (shows what would run without Docker)
+    cmds:
+      - act -n

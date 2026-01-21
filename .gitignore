@@ -1,6 +1,38 @@
+# Build outputs
 out
-node_modules
-client/server
-*.log
+dist
 *.vsix
+
+# Dependencies
+node_modules
+client/node_modules
+server/node_modules
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
 .vscode-test/
+.idea/
+*.swp
+*.swo
+*~
+
+# Lock files (uncomment if you want to ignore them)
+# package-lock.json
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+.cache/
