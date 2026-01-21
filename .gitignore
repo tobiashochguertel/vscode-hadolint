@@ -36,3 +36,6 @@ coverage/
 # Temporary files
 *.tmp
 .cache/
+
+commit-message.txt
+commit-message
