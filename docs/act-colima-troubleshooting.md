@@ -5,8 +5,9 @@
 When using `act` with Colima (Docker Desktop alternative for macOS), you may encounter two main issues:
 
 ### 1. Docker Socket Mount Error
+
 ```
-Error: failed to start container: Error response from daemon: error while creating mount source path 
+Error: failed to start container: Error response from daemon: error while creating mount source path
 '/Users/username/.colima/docker/docker.sock': mkdir: operation not supported
 ```
 
@@ -15,6 +16,7 @@ Error: failed to start container: Error response from daemon: error while creati
 **Solution**: Use `--container-daemon-socket=-` flag (configured in `.actrc`)
 
 ### 2. Intermittent Docker Authentication Errors
+
 ```
 Error response from daemon: authentication required - incorrect username or password
 ```
@@ -26,6 +28,7 @@ Error response from daemon: authentication required - incorrect username or pass
 ## Fixed Configuration
 
 ### `.actrc` File
+
 ```
 # Don't try to bind mount the Docker socket into containers
 --container-daemon-socket=-
@@ -37,6 +40,7 @@ Error response from daemon: authentication required - incorrect username or pass
 ### Taskfile Tasks
 
 1. **Pre-pull images** (run once or when images are updated):
+
    ```bash
    task act:pull
    ```
@@ -49,6 +53,7 @@ Error response from daemon: authentication required - incorrect username or pass
    ```
 
 The tasks automatically:
+
 - Use `--pull=false` to avoid authentication issues
 - Depend on `act:pull` to ensure images are cached
 - Use `.actrc` configuration for Colima compatibility
@@ -74,6 +79,7 @@ act --pull=false -j lint
 ## Current Status
 
 ✅ **Fixed** (as of act v0.2.84)
+
 - Upgraded from v0.2.82 to v0.2.84
 - Added `.actrc` configuration
 - Updated Taskfile with `--pull=false` flag

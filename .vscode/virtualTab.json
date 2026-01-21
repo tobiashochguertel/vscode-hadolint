@@ -4,7 +4,8 @@
     "name": "Currently Open Files",
     "files": [
       "Taskfile.yml",
-      ".actrc"
+      ".actrc",
+      "docs/act-colima-troubleshooting.md"
     ],
     "builtIn": true
   }

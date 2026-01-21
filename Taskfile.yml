@@ -3,6 +3,9 @@ version: '3'
 vars:
   VERBOSE: '{{if or .CLI_VERBOSE .VERBOSE}}true{{else}}false{{end}}'
   VERBOSE_FLAG: '{{if eq .VERBOSE "true"}}--verbose{{end}}'
+  # --pull=false
+  PULL: '{{if or .CLI_PULL (eq .PULL "false")}}false{{else}}true{{end}}'
+  PULL_FLAG: '{{if eq .PULL "false"}}--pull=false{{end}}'
 
   EXTENSION_NAME: hadolint
   PUBLISHER: TobiasHochguertel
@@ -20,6 +23,8 @@ tasks:
       - |
         echo "Verbose: {{.VERBOSE}}"
         echo "Verbose Flag: {{.VERBOSE_FLAG}}"
+        echo "Pull: {{.PULL}}"
+        echo "Pull Flag: {{.PULL_FLAG}}"
 
   install:
     desc: Install all dependencies
@@ -243,27 +248,27 @@ tasks:
     desc: Run CI workflow locally (run task act:pull first to cache images)
     deps: [act:pull]
     cmds:
-      - act {{.VERBOSE_FLAG}} --pull=false -j lint -j test
+      - act {{.VERBOSE_FLAG}} {{.PULL_FLAG}} -j lint -j test
 
   act:ci:lint:
     desc: Run CI lint job locally
     deps: [act:pull]
     cmds:
-      - act {{.VERBOSE_FLAG}} --pull=false -j lint
+      - act {{.VERBOSE_FLAG}} {{.PULL_FLAG}} -j lint
 
   act:ci:test:
     desc: Run CI test job locally
     deps: [act:pull]
     cmds:
-      - act {{.VERBOSE_FLAG}} --pull=false -j test
+      - act {{.VERBOSE_FLAG}} {{.PULL_FLAG}} -j test
 
   act:codeql:
     desc: Run CodeQL workflow locally
     deps: [act:pull]
     cmds:
-      - act {{.VERBOSE_FLAG}} --pull=false -W .github/workflows/codeql-analysis.yml
+      - act {{.VERBOSE_FLAG}} {{.PULL_FLAG}} -W .github/workflows/codeql-analysis.yml
 
   act:dryrun:
     desc: Dry-run all workflows (shows what would run without Docker)
     cmds:
-      - act {{.VERBOSE_FLAG}} -n
+      - act {{.VERBOSE_FLAG}} {{.PULL_FLAG}} -n
