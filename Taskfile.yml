@@ -1,7 +1,9 @@
 version: '3'
 
 vars:
-  VERBOSE: '{{.VERBOSE| default false}}'
+  VERBOSE: '{{if or .CLI_VERBOSE .VERBOSE}}true{{else}}false{{end}}'
+  VERBOSE_FLAG: '{{if eq .VERBOSE "true"}}--verbose{{end}}'
+
   EXTENSION_NAME: hadolint
   PUBLISHER: TobiasHochguertel
 
@@ -10,6 +12,14 @@ tasks:
     desc: List all available tasks
     cmds:
       - task --list
+
+  d:
+    desc: Debug task
+    cmds:
+      - echo "Debug task executed"
+      - |
+        echo "Verbose: {{.VERBOSE}}"
+        echo "Verbose Flag: {{.VERBOSE_FLAG}}"
 
   install:
     desc: Install all dependencies
@@ -208,42 +218,30 @@ tasks:
 
   act:list:
     desc: List available workflows
-    vars:
-      VERBOSE_FLAG: '{{if .VERBOSE}} --verbose {{end}}'
     cmds:
       - act {{.VERBOSE_FLAG}} -l
 
   act:ci:
     desc: Run CI workflow locally (requires Docker without authentication issues)
-    vars:
-      VERBOSE_FLAG: '{{if .VERBOSE}} --verbose {{end}}'
     cmds:
       - act {{.VERBOSE_FLAG}} -j lint -j test --container-architecture linux/amd64
 
   act:ci:lint:
     desc: Run CI lint job locally (requires Docker)
-    vars:
-      VERBOSE_FLAG: '{{if .VERBOSE}} --verbose {{end}}'
     cmds:
       - act {{.VERBOSE_FLAG}} -j lint --container-architecture linux/amd64
 
   act:ci:test:
     desc: Run CI test job locally (requires Docker)
-    vars:
-      VERBOSE_FLAG: '{{if .VERBOSE}} --verbose {{end}}'
     cmds:
       - act {{.VERBOSE_FLAG}} -j test --container-architecture linux/amd64
 
   act:codeql:
     desc: Run CodeQL workflow locally (requires Docker)
-    vars:
-      VERBOSE_FLAG: '{{if .VERBOSE}} --verbose {{end}}'
     cmds:
       - act {{.VERBOSE_FLAG}} -W .github/workflows/codeql-analysis.yml --container-architecture linux/amd64
 
   act:dryrun:
     desc: Dry-run all workflows (shows what would run without Docker)
-    vars:
-      VERBOSE_FLAG: '{{if .VERBOSE}} --verbose {{end}}'
     cmds:
       - act {{.VERBOSE_FLAG}} -n
