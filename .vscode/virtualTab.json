@@ -2,7 +2,9 @@
   {
     "id": "builtin_group_id",
     "name": "Currently Open Files",
-    "files": [],
+    "files": [
+      "Taskfile.yml"
+    ],
     "builtIn": true
   }
 ]
